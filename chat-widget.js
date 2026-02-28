@@ -35,6 +35,10 @@ class RealEstateChat {
 
   setupEventListeners() {
     this.startBtn.addEventListener('click', () => this.openChat());
+    const startBtn2 = document.getElementById('start-chat-2');
+    if (startBtn2) {
+      startBtn2.addEventListener('click', () => this.openChat());
+    }
     this.closeBtn.addEventListener('click', () => this.closeChat());
     this.sendBtn.addEventListener('click', () => this.sendMessage());
     this.chatInput.addEventListener('keypress', (e) => {

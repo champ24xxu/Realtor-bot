@@ -7,39 +7,100 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="logo">🏡 Dream Home Finder</div>
+      <div class="nav-links">
+        <a href="#features">Why Us</a>
+        <a href="#about">About</a>
+      </div>
+    </div>
+  </nav>
+
   <div class="container">
-    <header>
-      <h1>Find Your Dream Home</h1>
-      <p>Albuquerque's Fastest Property Matching AI</p>
+    <header class="hero-header">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1>Your Dream Home Awaits</h1>
+        <p>Find the perfect property in Albuquerque with AI-powered matching</p>
+        <button id="start-chat" class="btn-primary btn-large">Find Your Home Now</button>
+      </div>
     </header>
 
     <main>
-      <section class="hero">
-        <div class="hero-content">
-          <h2>Let's Find Your Perfect Property</h2>
-          <p>Answer a few quick questions and we'll match you with homes that fit your needs.</p>
-          <button id="start-chat" class="btn-primary">Start Now</button>
+      <section id="features" class="features">
+        <h2>Why Choose Us?</h2>
+        <div class="features-grid">
+          <div class="feature">
+            <div class="feature-icon">🎯</div>
+            <h3>Smart Matching</h3>
+            <p>Our AI learns what you want and shows you homes that truly fit your lifestyle and budget.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">⚡</div>
+            <h3>Lightning Fast</h3>
+            <p>Get matched with perfect properties in minutes, not days. Real listings, real results.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">💬</div>
+            <h3>Easy Conversation</h3>
+            <p>Just chat with our bot. Answer simple questions and get instant recommendations.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">📍</div>
+            <h3>Local Expertise</h3>
+            <p>Deep knowledge of Albuquerque neighborhoods, schools, and communities.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">🔒</div>
+            <h3>Trusted Partners</h3>
+            <p>Connected directly with top real estate agents ready to help you close.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">💰</div>
+            <h3>All Price Ranges</h3>
+            <p>From starter homes to luxury properties, we've got something for everyone.</p>
+          </div>
         </div>
       </section>
 
-      <section class="features">
-        <div class="feature">
-          <span class="icon">🏠</span>
-          <h3>Smart Matching</h3>
-          <p>AI-powered property matching based on your needs</p>
-        </div>
-        <div class="feature">
-          <span class="icon">⚡</span>
-          <h3>Instant Results</h3>
-          <p>Get matched properties in seconds</p>
-        </div>
-        <div class="feature">
-          <span class="icon">📱</span>
-          <h3>Easy Process</h3>
-          <p>Just answer 8 simple questions</p>
+      <section id="about" class="how-it-works">
+        <h2>How It Works</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <h3>Click Start</h3>
+            <p>Open the chat and click "Find Your Home Now"</p>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <h3>Answer Questions</h3>
+            <p>Tell us about your budget, needs, and dream home</p>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <h3>Get Matches</h3>
+            <p>See homes matched perfectly to your preferences</p>
+          </div>
+          <div class="step">
+            <div class="step-number">4</div>
+            <h3>Connect with Agent</h3>
+            <p>Work with a local expert to schedule tours</p>
+          </div>
         </div>
       </section>
+
+      <section class="cta-section">
+        <h2>Ready to Find Your Home?</h2>
+        <p>Don't wait another day. Start your home search now and take the first step toward your dream.</p>
+        <button id="start-chat-2" class="btn-primary btn-large">Start Searching Now</button>
+      </section>
     </main>
+
+    <footer class="footer">
+      <p>&copy; 2026 Dream Home Finder. All rights reserved.</p>
+      <p>Albuquerque Real Estate AI Matching Service</p>
+    </footer>
 
     <!-- Chat Widget Container -->
     <div id="chat-widget" class="chat-widget hidden">
