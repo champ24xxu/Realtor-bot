@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find Your Dream Home in Albuquerque</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Find Your Dream Home</h1>
+      <p>Albuquerque's Fastest Property Matching AI</p>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-content">
+          <h2>Let's Find Your Perfect Property</h2>
+          <p>Answer a few quick questions and we'll match you with homes that fit your needs.</p>
+          <button id="start-chat" class="btn-primary">Start Now</button>
+        </div>
+      </section>
+
+      <section class="features">
+        <div class="feature">
+          <span class="icon">🏠</span>
+          <h3>Smart Matching</h3>
+          <p>AI-powered property matching based on your needs</p>
+        </div>
+        <div class="feature">
+          <span class="icon">⚡</span>
+          <h3>Instant Results</h3>
+          <p>Get matched properties in seconds</p>
+        </div>
+        <div class="feature">
+          <span class="icon">📱</span>
+          <h3>Easy Process</h3>
+          <p>Just answer 8 simple questions</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Chat Widget Container -->
+    <div id="chat-widget" class="chat-widget hidden">
+      <div class="chat-header">
+        <h3>Real Estate Assistant</h3>
+        <button id="close-chat" class="close-btn">✕</button>
+      </div>
+      <div id="chat-messages" class="chat-messages"></div>
+      <div class="chat-input-area">
+        <input 
+          id="chat-input" 
+          type="text" 
+          placeholder="Type your answer..."
+          autocomplete="off"
+        >
+        <button id="send-btn" class="send-btn">Send</button>
+      </div>
+    </div>
+
+    <div id="chat-overlay" class="chat-overlay hidden"></div>
+  </div>
+
+  <script src="chat-widget.js"></script>
+</body>
+</html>
