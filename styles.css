@@ -68,13 +68,12 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 2rem 1.5rem;
 }
 
 /* Hero Header */
 .hero-header {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.9) 0%, rgba(30, 64, 175, 0.9) 100%),
-    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><pattern id="houses" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse"><g fill="rgba(255,255,255,0.1)"><path d="M50,150 L50,50 L100,20 L150,50 L150,150 Z M70,150 V80 M130,150 V80 M70,95 H130 M75,120 L75,150 M85,120 L85,150 M125,120 L125,150 M135,120 L135,150"/></g></pattern></defs><rect width="1200" height="600" fill="url(%23houses)"/></svg>');
+  background: url('https://images.unsplash.com/photo-1570129477492-45ac003d2b2b?w=1200&h=600&fit=crop');
   background-attachment: fixed;
   background-size: cover;
   background-position: center;
@@ -160,21 +159,23 @@ body {
 
 /* Features Section */
 .features {
-  padding: 4rem 0;
+  padding: 6rem 2rem;
   background: var(--light);
+  margin-top: 2rem;
+  border-radius: 16px;
 }
 
 .features h2 {
   text-align: center;
   font-size: 2.5rem;
-  margin-bottom: 3rem;
+  margin-bottom: 4rem;
   color: var(--dark);
 }
 
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  gap: 2.5rem;
   margin-bottom: 2rem;
 }
 
@@ -212,20 +213,23 @@ body {
 
 /* How It Works */
 .how-it-works {
-  padding: 4rem 0;
+  padding: 6rem 2rem;
+  background: white;
+  margin-top: 2rem;
+  border-radius: 16px;
 }
 
 .how-it-works h2 {
   text-align: center;
   font-size: 2.5rem;
-  margin-bottom: 3rem;
+  margin-bottom: 4rem;
   color: var(--dark);
 }
 
 .steps {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 2rem;
+  gap: 2.5rem;
   margin-bottom: 2rem;
 }
 
@@ -264,9 +268,9 @@ body {
   background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   color: white;
   padding: 4rem 2rem;
-  border-radius: 12px;
+  border-radius: 16px;
   text-align: center;
-  margin: 4rem 0;
+  margin: 6rem 2rem;
   box-shadow: 0 10px 40px rgba(37, 99, 235, 0.2);
 }
 
@@ -283,16 +287,7 @@ body {
 
 /* Footer */
 .footer {
-  background: var(--dark);
-  color: white;
-  text-align: center;
-  padding: 2rem;
-  margin-top: 4rem;
-  font-size: 0.9rem;
-}
-
-.footer p {
-  margin: 0.5rem 0;
+  display: none;
 }
 
 /* Chat Widget */
