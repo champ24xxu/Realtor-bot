@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lead Tracker Dashboard</title>
+  <link rel="stylesheet" href="dashboard-styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="dashboard-header">
+      <h1>🎯 Lead Tracker</h1>
+      <div class="header-actions">
+        <input type="text" id="api-key-input" placeholder="Enter HubSpot API Key" class="api-input">
+        <button id="load-btn" class="btn-load">Load Leads</button>
+      </div>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="total-count">0</div>
+        <div class="stat-label">Total Leads</div>
+      </div>
+      <div class="stat-card hot">
+        <div class="stat-number" id="hot-count">0</div>
+        <div class="stat-label">🔴 Hot</div>
+      </div>
+      <div class="stat-card warm">
+        <div class="stat-number" id="warm-count">0</div>
+        <div class="stat-label">🟡 Warm</div>
+      </div>
+      <div class="stat-card cold">
+        <div class="stat-number" id="cold-count">0</div>
+        <div class="stat-label">🔵 Cold</div>
+      </div>
+    </div>
+
+    <div class="filter-tabs">
+      <button class="filter-btn active" data-filter="all">All Leads</button>
+      <button class="filter-btn" data-filter="hot">🔴 Hot</button>
+      <button class="filter-btn" data-filter="warm">🟡 Warm</button>
+      <button class="filter-btn" data-filter="cold">🔵 Cold</button>
+    </div>
+
+    <div class="leads-container">
+      <div id="leads-list" class="leads-grid">
+        <div class="empty-state">
+          <p>Enter your HubSpot API key and click "Load Leads" to see your contacts</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="dashboard-script.js"></script>
+</body>
+</html>
