@@ -1,4 +1,4 @@
-// LeadFlow Chat Widget — v2.1 — Quick replies, mortgage calc, neighborhood scores, email capture
+// LeadFlow Chat Widget — v3.0 — Buyer + Seller flows, lead scoring, exit intent
 
 const DEMO_PROPS = [
   { id:'d1', address:'4521 San Pedro Dr NE, Albuquerque, NM', price:265000, beds:3, baths:2, sqft:1850, url:'https://www.redfin.com/NM/Albuquerque' },
@@ -11,7 +11,6 @@ const DEMO_PROPS = [
   { id:'d8', address:'3310 Lomas Blvd NE, Albuquerque, NM',   price:155000, beds:2, baths:1, sqft:1050, url:'https://www.redfin.com/NM/Albuquerque' },
 ];
 
-// Neighborhood scores (Safety/Schools/Appreciation/Walkability out of 10)
 const NEIGHBORHOOD_SCORES = {
   'northeast heights': { label:'Northeast Heights', safety:8, schools:9, appreciation:7, walkability:6, summary:'Top-rated schools, family-friendly, strong resale value.' },
   'ne heights':        { label:'Northeast Heights', safety:8, schools:9, appreciation:7, walkability:6, summary:'Top-rated schools, family-friendly, strong resale value.' },
@@ -44,102 +43,143 @@ function calcMortgage(price, downPct = 0.20, rate = 0.0699, years = 30) {
   };
 }
 
-// ── Demo Bot Engine ────────────────────────────────────────────
-class DemoBot {
+// ── Lead Scoring ───────────────────────────────────────────────
+function calcLeadScore(profile) {
+  let score = 0;
+
+  // Timeline
+  const timeline = (profile.timeline || '').toLowerCase();
+  if (timeline.includes('ready') || timeline.includes('0–30') || timeline.includes('0-30')) score += 3;
+  else if (timeline.includes('1–3') || timeline.includes('1-3') || timeline.includes('asap')) score += 2;
+  else if (timeline.includes('3-6') || timeline.includes('3–6')) score += 1;
+
+  // Budget
+  const budget = (profile.budget || '').toLowerCase();
+  if (budget.includes('450k') || budget.includes('450k+')) score += 2;
+  else if (budget.includes('300k') || budget.includes('350k')) score += 1;
+
+  // Contact info quality
+  if (profile.email) score += 1;
+  if (profile.phone) score += 1;
+
+  // Has specific area preference
+  const area = (profile.area || '').toLowerCase();
+  if (area && !area.includes('no preference') && !area.includes('no pref')) score += 1;
+
+  // Seller — always warm lead
+  if (profile.intent === 'sell') score += 2;
+
+  return Math.min(score, 10);
+}
+
+// ── Buyer Bot ────────────────────────────────────────────────
+class BuyerBot {
   constructor() {
     this.step = 0;
-    this.profile = {};
-    this.awaitingMortgage = false;
+    this.profile = { intent: 'buy' };
+    this.waitingMortgage = false;
     this.steps = [
-      {
-        key: null,
-        ask: "Hi! 👋 I'm your AI home-finding assistant. I'll help match you with the perfect property in just 2 minutes. Ready to start?",
-        options: ['Yes, let\'s go! 🏡', 'How does this work?'],
-      },
       { key: 'name',     ask: "Great! What's your name?" },
-      { key: 'email',    ask: "Nice! What's the best email to reach you, {name}? (So your agent can follow up with matches 📬)" },
-      { key: 'phone',    ask: "And your phone number? (Optional — for urgent updates only)" },
+      { key: 'email',    ask: "Nice to meet you, {name}! What's the best email for your agent to send matches? 📬" },
+      { key: 'phone',    ask: "And a phone number? (Optional — only for urgent updates)" },
       { key: 'budget',   ask: "💰 What's your budget range?", options: ['Under $200k', '$200k–$300k', '$300k–$450k', '$450k+'] },
-      { key: 'beds',     ask: "🛏 How many bedrooms?", options: ['1–2 beds', '3 beds', '4+ beds'] },
-      { key: 'timeline', ask: "⏳ What's your timeline?", options: ['Ready now (0–30 days)', '1–3 months', 'Just exploring'] },
-      { key: 'area',     ask: "📍 Any preferred area?", options: ['Northeast Heights', 'Rio Rancho', 'Old Town', 'Westside', 'No preference'] },
+      { key: 'beds',     ask: "🛏 How many bedrooms do you need?", options: ['1–2 beds', '3 beds', '4+ beds'] },
+      { key: 'timeline', ask: "⏳ What's your timeline to move?", options: ['Ready now (0–30 days)', '1–3 months', 'Just exploring'] },
+      { key: 'area',     ask: "📍 Any preferred neighborhood?", options: ['Northeast Heights', 'Rio Rancho', 'Old Town', 'Westside', 'No preference'] },
       { key: null,       ask: 'SHOW_PROPERTIES' },
     ];
   }
 
   reply(userMsg) {
     const step = this.steps[this.step];
-    if (step && step.key && userMsg) {
-      this.profile[step.key] = userMsg;
-    }
-
+    if (step && step.key && userMsg) this.profile[step.key] = userMsg;
     this.step++;
     const next = this.steps[this.step];
     if (!next) return { type: 'done' };
-
-    if (next.ask === 'SHOW_PROPERTIES') {
-      return { type: 'properties', profile: this.profile };
-    }
-
-    let text = next.ask.replace('{name}', this.profile.name || 'there');
+    if (next.ask === 'SHOW_PROPERTIES') return { type: 'properties', profile: this.profile };
+    const text = next.ask.replace('{name}', this.profile.name || 'there');
     return { type: 'chat', text, options: next.options || null };
   }
 
   matchProperties() {
-    let maxPrice = 500000;
-    let minBeds = 2;
-
-    const budgetStr = (this.profile.budget || '').replace(/[^0-9k\-]/gi, '');
-    const nums = budgetStr.split('-').map(s => {
-      s = s.trim().replace(/k$/i, '000');
-      return parseInt(s) || 0;
-    }).filter(n => n > 0);
-    if (nums.length) maxPrice = Math.max(...nums);
-
-    // Handle "Under $200k" etc
-    if (this.profile.budget?.includes('Under') || this.profile.budget?.includes('under')) maxPrice = 200000;
-    if (this.profile.budget?.includes('200k–300k') || this.profile.budget?.includes('200k-300k')) maxPrice = 300000;
-    if (this.profile.budget?.includes('300k–450k') || this.profile.budget?.includes('300k-450k')) maxPrice = 450000;
-    if (this.profile.budget?.includes('450k+') || this.profile.budget?.includes('450k')) maxPrice = 900000;
-
+    let maxPrice = 500000, minBeds = 2;
+    const b = this.profile.budget || '';
+    if (b.includes('Under')) maxPrice = 200000;
+    else if (b.includes('200k')) maxPrice = 300000;
+    else if (b.includes('300k')) maxPrice = 450000;
+    else if (b.includes('450k')) maxPrice = 900000;
     const bedsMatch = (this.profile.beds || '').match(/\d+/);
     if (bedsMatch) minBeds = parseInt(bedsMatch[0]);
     if (this.profile.beds?.includes('1')) minBeds = 1;
-
     return DEMO_PROPS.filter(p => p.price <= maxPrice && p.beds >= minBeds).slice(0, 3);
+  }
+}
+
+// ── Seller Bot ────────────────────────────────────────────────
+class SellerBot {
+  constructor() {
+    this.step = 0;
+    this.profile = { intent: 'sell' };
+    this.steps = [
+      { key: 'address',  ask: "📍 What's the address of the home you're looking to sell?" },
+      { key: 'timeline', ask: "⏳ What's your selling timeline?", options: ['ASAP', '3–6 months', 'Just exploring value'] },
+      { key: 'name',     ask: "Got it! What's your name so the agent can follow up?" },
+      { key: 'email',    ask: "And the best email to reach you, {name}? 📬" },
+      { key: 'phone',    ask: "Last one — phone number? (Optional)" },
+      { key: null,       ask: 'SHOW_VALUATION' },
+    ];
+  }
+
+  reply(userMsg) {
+    const step = this.steps[this.step];
+    if (step && step.key && userMsg) this.profile[step.key] = userMsg;
+    this.step++;
+    const next = this.steps[this.step];
+    if (!next) return { type: 'done' };
+    if (next.ask === 'SHOW_VALUATION') return { type: 'valuation', profile: this.profile };
+    const text = next.ask.replace('{name}', this.profile.name || 'there');
+    return { type: 'chat', text, options: next.options || null };
   }
 }
 
 // ── Main Chat Widget ───────────────────────────────────────────
 class RealEstateChat {
   constructor() {
-    this.ws              = null;
-    this.sessionKey      = localStorage.getItem('realtor_session_key') || 'realtor-' + Date.now();
-    this.gatewayUrl      = this.getGatewayUrl();
-    this.demoBot         = new DemoBot();
-    this.useDemoMode     = false;
+    this.ws            = null;
+    this.sessionKey    = localStorage.getItem('realtor_session_key') || 'realtor-' + Date.now();
+    this.gatewayUrl    = this.getGatewayUrl();
+    this.PROXY_URL     = 'http://31.97.212.21:3001';
+    this.HS_PORTAL_ID  = '245406482';
+    this.HS_FORM_GUID  = '42d060a5-8fe3-47a0-b741-63a4907b31e0';
+    this.CALENDLY_URL  = this.getCalendlyUrl();
+
+    this.bot           = null;          // set after buy/sell choice
+    this.intent        = null;          // 'buy' | 'sell'
+    this.useDemoMode   = false;
     this.waitingMortgage = false;
-    this.CALENDLY_URL    = this.getCalendlyUrl();
-    this.idleTimer       = null;
-    this.idleNudges      = [
-      "Still there? 😊 I can also help with mortgage estimates or neighborhood info!",
+    this.exitShown     = false;
+
+    this.idleTimer     = null;
+    this.idleNudgeIndex = 0;
+    this.idleNudges    = [
+      "Still there? 😊 I can help with mortgage estimates or neighborhood info!",
       "No rush! When you're ready, just tell me what you're looking for 🏡",
-      "Fun fact — most of my clients find their match in under 2 minutes. Ready to try?",
+      "Fun fact — most clients find their match in under 2 minutes. Ready?",
     ];
-    this.idleNudgeIndex  = 0;
 
     this.initElements();
     this.bindEvents();
+    this.setupExitIntent();
   }
 
   getGatewayUrl() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('gateway') || 'ws://31.97.212.21:18789';
+    const p = new URLSearchParams(window.location.search);
+    return p.get('gateway') || 'ws://31.97.212.21:18789';
   }
 
   getCalendlyUrl() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('calendly') || 'https://calendly.com/grow-neighborai';
+    const p = new URLSearchParams(window.location.search);
+    return p.get('calendly') || 'https://calendly.com/grow-neighborai';
   }
 
   initElements() {
@@ -156,17 +196,32 @@ class RealEstateChat {
     document.getElementById('start-chat-2')?.addEventListener('click', () => this.openChat());
     this.closeBtn?.addEventListener('click', () => this.closeChat());
     this.sendBtn?.addEventListener('click', () => this.sendMessage());
-    this.chatInput?.addEventListener('keypress', (e) => {
+    this.chatInput?.addEventListener('keypress', e => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.sendMessage(); }
     });
   }
 
-  openChat() {
+  // ── Exit Intent ──────────────────────────────────────────────
+  setupExitIntent() {
+    let pageTime = 0;
+    const tick = setInterval(() => { pageTime++; }, 1000);
+
+    document.addEventListener('mouseleave', e => {
+      if (this.exitShown) return;
+      if (e.clientY > 20) return;    // only top-edge exit
+      if (pageTime < 5) return;      // must have been on page ≥5s
+      this.exitShown = true;
+      clearInterval(tick);
+      this.openChat('exit');
+    });
+  }
+
+  openChat(trigger) {
     this.chatWidget?.classList.remove('hidden');
     this.overlay?.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
     this.chatInput?.focus();
-    this.connect();
+    this.connect(trigger);
     this.resetIdleTimer();
   }
 
@@ -187,78 +242,70 @@ class RealEstateChat {
   }
 
   sendIdleNudge() {
-    if (!this.useDemoMode && this.ws?.readyState !== WebSocket.OPEN) return;
     const msg = this.idleNudges[this.idleNudgeIndex % this.idleNudges.length];
     this.idleNudgeIndex++;
     this.addMessage('bot', msg);
-    // Schedule another nudge in 45s if still idle
     this.idleTimer = setTimeout(() => this.sendIdleNudge(), 45000);
   }
 
-  connect() {
+  connect(trigger) {
     if (this.ws || this.useDemoMode) return;
 
     try {
       this.ws = new WebSocket(`${this.gatewayUrl}/ws`);
-
       const timeout = setTimeout(() => {
         if (this.ws?.readyState !== WebSocket.OPEN) {
-          this.ws?.close();
-          this.ws = null;
-          this.startDemoMode();
+          this.ws?.close(); this.ws = null;
+          this.startDemoMode(trigger);
         }
       }, 4000);
 
       this.ws.onopen = () => {
         clearTimeout(timeout);
-        this.addTyping();
-        setTimeout(() => {
-          this.removeTyping();
-          const firstStep = this.demoBot.steps[0];
-          this.addMessage('bot', firstStep.ask);
-          if (firstStep.options) this.addQuickReplies(firstStep.options);
-        }, 800);
+        this.showIntroAndAskIntent(trigger);
       };
-
-      this.ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          this.handleServerMessage(data);
-        } catch (_) {}
+      this.ws.onmessage = e => {
+        try { this.handleServerMessage(JSON.parse(e.data)); } catch (_) {}
       };
-
       this.ws.onerror = () => {
-        clearTimeout(timeout);
-        this.ws = null;
-        this.startDemoMode();
+        clearTimeout(timeout); this.ws = null; this.startDemoMode(trigger);
       };
-
       this.ws.onclose = () => { this.ws = null; };
-
     } catch (_) {
-      this.startDemoMode();
+      this.startDemoMode(trigger);
     }
   }
 
-  startDemoMode() {
+  startDemoMode(trigger) {
     this.useDemoMode = true;
+    this.showIntroAndAskIntent(trigger);
+  }
+
+  showIntroAndAskIntent(trigger) {
     this.addTyping();
     setTimeout(() => {
       this.removeTyping();
-      const firstStep = this.demoBot.steps[0];
-      this.addMessage('bot', firstStep.ask);
-      if (firstStep.options) this.addQuickReplies(firstStep.options);
-      this.demoBot.step = 1;
-    }, 600);
+      if (trigger === 'exit') {
+        this.addMessage('bot', "Wait — before you go! 👋 Want to see what homes in your area are worth right now?");
+        setTimeout(() => {
+          this.addMessage('bot', "I'm your AI real estate assistant. Are you looking to buy or sell?");
+          this.addQuickReplies(['🏠 Buy a home', '💰 Sell my home']);
+        }, 600);
+      } else {
+        this.addMessage('bot', "Hi! 👋 I'm your AI real estate assistant — I can match you with homes, run valuations, estimate mortgages, and book you with an agent in under 2 minutes.");
+        setTimeout(() => {
+          this.addMessage('bot', "Are you looking to buy or sell?");
+          this.addQuickReplies(['🏠 Buy a home', '💰 Sell my home']);
+        }, 700);
+      }
+    }, 800);
   }
 
   sendMessage(text) {
     const msg = text || this.chatInput?.value.trim();
     if (!msg) return;
 
-    // Remove quick reply buttons
     document.querySelectorAll('.quick-replies').forEach(el => el.remove());
-
     this.addMessage('user', msg);
     if (this.chatInput) this.chatInput.value = '';
     this.chatInput?.focus();
@@ -270,11 +317,43 @@ class RealEstateChat {
       this.ws.send(JSON.stringify({ type: 'chat.send', sessionKey: this.sessionKey, message: msg }));
     } else {
       this.startDemoMode();
+      this.handleDemoReply(msg);
     }
   }
 
   handleDemoReply(userMsg) {
-    // Mortgage calculator interception
+    // ── Intent selection ──────────────────────────────────────
+    if (!this.intent) {
+      const lower = userMsg.toLowerCase();
+      if (lower.includes('sell') || lower.includes('💰')) {
+        this.intent = 'sell';
+        this.bot = new SellerBot();
+        this.addTyping();
+        setTimeout(() => {
+          this.removeTyping();
+          this.addMessage('bot', "Great! Let's figure out what your home is worth. I'll pull live market data for you. 🏡");
+          setTimeout(() => {
+            const result = this.bot.reply(null);
+            this.addMessage('bot', result.text);
+          }, 600);
+        }, 700);
+      } else {
+        this.intent = 'buy';
+        this.bot = new BuyerBot();
+        this.addTyping();
+        setTimeout(() => {
+          this.removeTyping();
+          this.addMessage('bot', "Awesome! Let's find you the perfect home. I just need a few quick details. 🏡");
+          setTimeout(() => {
+            const result = this.bot.reply(null);
+            this.addMessage('bot', result.text);
+          }, 600);
+        }, 700);
+      }
+      return;
+    }
+
+    // ── Mortgage prompt interception ─────────────────────────
     if (this.waitingMortgage) {
       this.waitingMortgage = false;
       const lower = userMsg.toLowerCase();
@@ -289,52 +368,106 @@ class RealEstateChat {
           }, 800);
         }, 700);
       } else {
-        this.addMessage('bot', "No problem! Want to book a quick call with an agent to see these homes?");
+        this.addMessage('bot', "No problem! Want to book a quick call to tour these homes?");
         setTimeout(() => this.addCalendlyButton(), 500);
       }
       return;
     }
 
+    // ── Route to correct bot ──────────────────────────────────
     this.addTyping();
     setTimeout(() => {
       this.removeTyping();
-      const result = this.demoBot.reply(userMsg);
+
+      const result = this.bot.reply(userMsg);
 
       if (result.type === 'chat') {
         this.addMessage('bot', result.text);
         if (result.options) this.addQuickReplies(result.options);
 
-        // Show neighborhood score after area is answered
-        const prevStep = this.demoBot.steps[this.demoBot.step - 1];
-        if (prevStep?.key === 'area') {
-          const score = getNeighborhoodScore(userMsg);
-          if (score) {
-            setTimeout(() => this.addNeighborhoodScore(score), 500);
+        // Show neighborhood score after area answer (buyer flow)
+        if (this.intent === 'buy') {
+          const prevKey = this.bot.steps[this.bot.step - 1]?.key;
+          if (prevKey === 'area') {
+            const score = getNeighborhoodScore(userMsg);
+            if (score) setTimeout(() => this.addNeighborhoodScore(score), 500);
           }
         }
 
       } else if (result.type === 'properties') {
-        this.pushToHubSpot(result.profile || this.demoBot.profile);
-        const props = this.demoBot.matchProperties();
+        // Buyer — push lead + show properties
+        const profile = result.profile || this.bot.profile;
+        profile.score = calcLeadScore(profile);
+        this.pushToHubSpot(profile);
+        const props = this.bot.matchProperties();
         this.addMessage('bot', `🏡 Based on what you told me, here are your top matches:`);
         setTimeout(() => {
           this.addPropertyCards(props);
-          // Offer mortgage calculator
           setTimeout(() => {
             this.addMessage('bot', `Want to see your estimated monthly payment on these homes? 💰`);
             this.addQuickReplies(['Yes, show me!', 'No thanks']);
             this.waitingMortgage = true;
           }, 900);
         }, 400);
+
+      } else if (result.type === 'valuation') {
+        // Seller — pull AVM and show valuation card
+        const profile = result.profile || this.bot.profile;
+        profile.score = calcLeadScore(profile);
+        this.pushToHubSpot(profile);
+        this.addMessage('bot', "⏳ Pulling live market data for your address...");
+        this.fetchValuation(profile.address, profile);
+
       } else {
         this.addMessage('bot', "Thanks! An agent will be in touch with you shortly. 🏡");
       }
     }, 900 + Math.random() * 500);
   }
 
+  // ── Seller Valuation ──────────────────────────────────────────
+  async fetchValuation(address, profile) {
+    let data = null;
+    try {
+      const resp = await fetch(`${this.PROXY_URL}/property?address=${encodeURIComponent(address)}`, { signal: AbortSignal.timeout(8000) });
+      data = await resp.json();
+    } catch (_) { /* fall through to demo */ }
+
+    if (data?.value) {
+      this.showValuationCard(data.value, data.rentEstimate, address);
+    } else {
+      // Demo fallback
+      const demoVal = 295000 + Math.floor(Math.random() * 80000);
+      const demoRent = Math.round(demoVal * 0.007);
+      this.showValuationCard(demoVal, demoRent, address);
+    }
+
+    setTimeout(() => {
+      this.addMessage('bot', `An agent can walk you through the full market analysis. Want to book a free listing consultation? 📅`);
+      setTimeout(() => this.addCalendlyButton(), 500);
+    }, 1000);
+  }
+
+  showValuationCard(value, rentEstimate, address) {
+    const wrap = document.createElement('div');
+    wrap.className = 'message bot';
+
+    const card = document.createElement('div');
+    card.className = 'mortgage-card';
+    card.innerHTML = `
+      <div class="mortgage-title">🏠 Home Valuation Estimate</div>
+      <div style="font-size:12px;opacity:0.7;margin-bottom:8px;">${this.esc(address)}</div>
+      <div class="mortgage-monthly">~$${Number(value).toLocaleString()}<small> estimated value</small></div>
+      ${rentEstimate ? `<div class="mortgage-row"><span>Est. Rental Income</span><span>~$${Number(rentEstimate).toLocaleString()}/mo</span></div>` : ''}
+      <div class="mortgage-note">*Based on live market data. Full CMA provided by your agent.</div>
+    `;
+
+    wrap.appendChild(card);
+    this.chatMessages.appendChild(wrap);
+    this.scrollBottom();
+  }
+
   showMortgageEstimate() {
-    // Get best-guess price from matched properties
-    const props = this.demoBot.matchProperties();
+    const props = (this.bot instanceof BuyerBot) ? this.bot.matchProperties() : [];
     const price = props.length ? props[0].price : 250000;
     const m = calcMortgage(price);
 
@@ -376,11 +509,9 @@ class RealEstateChat {
   addMessage(role, text) {
     const wrap = document.createElement('div');
     wrap.className = `message ${role}`;
-
     const bubble = document.createElement('div');
     bubble.className = 'message-content';
     bubble.textContent = text;
-
     wrap.appendChild(bubble);
     this.chatMessages.appendChild(wrap);
     this.scrollBottom();
@@ -389,17 +520,13 @@ class RealEstateChat {
   addQuickReplies(options) {
     const container = document.createElement('div');
     container.className = 'quick-replies';
-
     options.forEach(opt => {
       const btn = document.createElement('button');
       btn.className = 'quick-reply-btn';
       btn.textContent = opt;
-      btn.addEventListener('click', () => {
-        this.sendMessage(opt);
-      });
+      btn.addEventListener('click', () => this.sendMessage(opt));
       container.appendChild(btn);
     });
-
     this.chatMessages.appendChild(container);
     this.scrollBottom();
   }
@@ -407,20 +534,14 @@ class RealEstateChat {
   addNeighborhoodScore(score) {
     const wrap = document.createElement('div');
     wrap.className = 'message bot';
-
     const card = document.createElement('div');
     card.className = 'neighborhood-card';
-
     const scoreBar = (label, val) => `
       <div class="score-row">
         <span class="score-label">${label}</span>
-        <div class="score-bar-track">
-          <div class="score-bar-fill" style="width:${val * 10}%"></div>
-        </div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${val*10}%"></div></div>
         <span class="score-num">${val}/10</span>
-      </div>
-    `;
-
+      </div>`;
     card.innerHTML = `
       <div class="neighborhood-title">📍 ${score.label}</div>
       <div class="neighborhood-summary">${score.summary}</div>
@@ -429,7 +550,6 @@ class RealEstateChat {
       ${scoreBar('📈 Appreciation', score.appreciation)}
       ${scoreBar('🚶 Walkability', score.walkability)}
     `;
-
     wrap.appendChild(card);
     this.chatMessages.appendChild(wrap);
     this.scrollBottom();
@@ -439,16 +559,12 @@ class RealEstateChat {
     if (!props.length) return;
     const wrap = document.createElement('div');
     wrap.className = 'message bot';
-
     const container = document.createElement('div');
     container.className = 'property-cards';
-
     props.forEach(p => {
       const card = document.createElement('a');
       card.className = 'prop-card';
-      card.href = p.url;
-      card.target = '_blank';
-      card.rel = 'noopener noreferrer';
+      card.href = p.url; card.target = '_blank'; card.rel = 'noopener noreferrer';
       card.innerHTML = `
         <div class="prop-icon">🏠</div>
         <div class="prop-body">
@@ -460,11 +576,9 @@ class RealEstateChat {
             ${p.sqft ? `<span>📐 ${Number(p.sqft).toLocaleString()} sqft</span>` : ''}
           </div>
         </div>
-        <div class="prop-arrow">→</div>
-      `;
+        <div class="prop-arrow">→</div>`;
       container.appendChild(card);
     });
-
     wrap.appendChild(container);
     this.chatMessages.appendChild(wrap);
     this.scrollBottom();
@@ -474,14 +588,10 @@ class RealEstateChat {
     const link = url || this.CALENDLY_URL;
     const wrap = document.createElement('div');
     wrap.className = 'message bot';
-
     const btn = document.createElement('a');
     btn.className = 'calendly-btn';
-    btn.href = link;
-    btn.target = '_blank';
-    btn.rel = 'noopener noreferrer';
+    btn.href = link; btn.target = '_blank'; btn.rel = 'noopener noreferrer';
     btn.innerHTML = '📅 Book a Free 15-Min Call';
-
     wrap.appendChild(btn);
     this.chatMessages.appendChild(wrap);
     this.scrollBottom();
@@ -504,44 +614,41 @@ class RealEstateChat {
   pushToHubSpot(profile) {
     const lead = {
       name: profile.name||'', email: profile.email||'', phone: profile.phone||'',
-      budget: profile.budget||'', beds: profile.beds||'', timeline: profile.timeline||'',
-      area: profile.area||'', ts: new Date().toISOString(),
+      intent: profile.intent||'buy',
+      budget: profile.budget||'', beds: profile.beds||'',
+      timeline: profile.timeline||'', area: profile.area||'',
+      address: profile.address||'',
+      score: profile.score || 0,
+      ts: new Date().toISOString(),
     };
     try {
       const saved = JSON.parse(localStorage.getItem('leadflow_leads')||'[]');
-      saved.push(lead); localStorage.setItem('leadflow_leads', JSON.stringify(saved));
+      saved.push(lead);
+      localStorage.setItem('leadflow_leads', JSON.stringify(saved));
     } catch(e) {}
     const tryPush = (attempt) => {
-      const portalId = '245406482';
-      const formGuid = '42d060a5-8fe3-47a0-b741-63a4907b31e0';
       const nameParts = (lead.name||'').trim().split(' ');
       const payload = {
         fields: [
           { name: 'firstname', value: nameParts[0]||'' },
-          { name: 'lastname', value: nameParts.slice(1).join(' ')||'' },
-          { name: 'email', value: lead.email||'' },
-          { name: 'phone', value: lead.phone||'' },
+          { name: 'lastname',  value: nameParts.slice(1).join(' ')||'' },
+          { name: 'email',     value: lead.email||'' },
+          { name: 'phone',     value: lead.phone||'' },
         ],
         context: { pageUri: window.location.href, pageName: document.title }
       };
-      fetch(`https://api.hsforms.com/submissions/v3/integration/submit/${portalId}/${formGuid}`, {
-        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload),
+      fetch(`https://api.hsforms.com/submissions/v3/integration/submit/${this.HS_PORTAL_ID}/${this.HS_FORM_GUID}`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload),
       }).then(r=>{ if(!r.ok && attempt<3) setTimeout(()=>tryPush(attempt+1),3000); })
       .catch(()=>{ if(attempt<3) setTimeout(()=>tryPush(attempt+1),3000); });
     };
     tryPush(1);
   }
 
-  scrollBottom() {
-    this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-  }
-
-  esc(str) {
-    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+  scrollBottom() { this.chatMessages.scrollTop = this.chatMessages.scrollHeight; }
+  esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   window.realestateChat = new RealEstateChat();
 });
-
