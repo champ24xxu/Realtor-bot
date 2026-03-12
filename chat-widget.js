@@ -426,14 +426,25 @@ class RealEstateChat {
 
   // ── Seller Valuation ──────────────────────────────────────────
   async fetchValuation(address, profile) {
-    let data = null;
+    const RENTCAST_KEY = 'e6d1d9a8ce9641838c3509e07c533422';
+    let value = null, rentEstimate = null;
     try {
-      const resp = await fetch(`${this.PROXY_URL}/property?address=${encodeURIComponent(address)}`, { signal: AbortSignal.timeout(8000) });
-      data = await resp.json();
+      const [avmResp, rentResp] = await Promise.all([
+        fetch(`https://api.rentcast.io/v1/avm/value?address=${encodeURIComponent(address)}`, {
+          headers: { 'X-Api-Key': RENTCAST_KEY }, signal: AbortSignal.timeout(8000)
+        }),
+        fetch(`https://api.rentcast.io/v1/avm/rent/long-term?address=${encodeURIComponent(address)}`, {
+          headers: { 'X-Api-Key': RENTCAST_KEY }, signal: AbortSignal.timeout(8000)
+        })
+      ]);
+      const avmData = avmResp.ok ? await avmResp.json() : null;
+      const rentData = rentResp.ok ? await rentResp.json() : null;
+      if (avmData?.price) value = avmData.price;
+      if (rentData?.rent) rentEstimate = rentData.rent;
     } catch (_) { /* fall through to demo */ }
 
-    if (data?.value) {
-      this.showValuationCard(data.value, data.rentEstimate, address);
+    if (value) {
+      this.showValuationCard(value, rentEstimate, address);
     } else {
       // Demo fallback
       const demoVal = 295000 + Math.floor(Math.random() * 80000);
