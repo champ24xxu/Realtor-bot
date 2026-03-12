@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeadFlow Dashboard — NeighborAI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+    header { background: #1e293b; border-bottom: 1px solid #334155; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+    header h1 { font-size: 20px; font-weight: 700; color: #f8fafc; }
+    header span { font-size: 13px; color: #64748b; }
+    .badge { background: #10b981; color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 9999px; margin-left: 8px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; padding: 24px; }
+    .stat { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
+    .stat .label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: .05em; }
+    .stat .value { font-size: 32px; font-weight: 700; color: #f8fafc; margin-top: 4px; }
+    .stat .sub { font-size: 12px; color: #10b981; margin-top: 4px; }
+    .section { padding: 0 24px 24px; }
+    .section h2 { font-size: 15px; font-weight: 600; color: #94a3b8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: .05em; }
+    table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 12px; overflow: hidden; }
+    thead tr { background: #0f172a; }
+    th { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: .05em; padding: 12px 16px; text-align: left; }
+    td { padding: 12px 16px; font-size: 14px; border-top: 1px solid #334155; }
+    tr:hover td { background: #263248; }
+    .score { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 700; }
+    .score.hot { background: #052e16; color: #4ade80; }
+    .score.warm { background: #422006; color: #fb923c; }
+    .score.cold { background: #1e1b4b; color: #818cf8; }
+    .intent { font-size: 12px; color: #94a3b8; }
+    .empty { text-align: center; padding: 48px; color: #475569; }
+    .empty h3 { font-size: 18px; margin-bottom: 8px; }
+    .toolbar { display: flex; align-items: center; gap: 12px; padding: 0 24px 16px; }
+    .toolbar input { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 8px 14px; color: #e2e8f0; font-size: 14px; width: 260px; outline: none; }
+    .toolbar input:focus { border-color: #3b82f6; }
+    .btn { background: #3b82f6; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn:hover { background: #2563eb; }
+    .btn.secondary { background: #334155; color: #94a3b8; }
+    .btn.secondary:hover { background: #475569; }
+    #status { font-size: 13px; color: #64748b; margin-left: auto; }
+  </style>
+</head>
+<body>
+  <header>
+    <div style="display:flex;align-items:center;gap:8px">
+      <h1>⭐ LeadFlow Dashboard</h1>
+      <span class="badge" id="liveCount">0 leads</span>
+    </div>
+    <span id="lastSync">Last sync: never</span>
+  </header>
+
+  <div class="stats" id="statsBar">
+    <div class="stat"><div class="label">Total Leads</div><div class="value" id="statTotal">0</div><div class="sub">all time</div></div>
+    <div class="stat"><div class="label">Hot Leads</div><div class="value" id="statHot">0</div><div class="sub">score ≥ 7</div></div>
+    <div class="stat"><div class="label">Buyers</div><div class="value" id="statBuyers">0</div><div class="sub">intent: buy</div></div>
+    <div class="stat"><div class="label">Sellers</div><div class="value" id="statSellers">0</div><div class="sub">intent: sell</div></div>
+    <div class="stat"><div class="label">Booked</div><div class="value" id="statBooked">0</div><div class="sub">calendly clicks</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Search by name, email, or area…" oninput="renderTable()" />
+    <select id="filterScore" onchange="renderTable()" style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:8px 12px;color:#e2e8f0;font-size:14px;outline:none">
+      <option value="">All scores</option>
+      <option value="hot">Hot (7–10)</option>
+      <option value="warm">Warm (4–6)</option>
+      <option value="cold">Cold (1–3)</option>
+    </select>
+    <button class="btn secondary" onclick="loadLeads()">↺ Refresh</button>
+    <button class="btn" onclick="exportCSV()">⬇ Export CSV</button>
+    <span id="status"></span>
+  </div>
+
+  <div class="section">
+    <h2>Captured Leads</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Score</th>
+          <th>Intent</th>
+          <th>Area</th>
+          <th>Budget</th>
+          <th>Timeline</th>
+          <th>Captured</th>
+        </tr>
+      </thead>
+      <tbody id="leadsBody"></tbody>
+    </table>
+    <div class="empty" id="emptyState" style="display:none">
+      <h3>No leads yet</h3>
+      <p>Leads captured by the widget will appear here automatically.</p>
+    </div>
+  </div>
+
+  <script>
+    let allLeads = [];
+
+    function loadLeads() {
+      document.getElementById('status').textContent = 'Loading…';
+      // Load from localStorage (widget saves here as fallback)
+      const raw = localStorage.getItem('leadflow_leads');
+      if (raw) {
+        try { allLeads = JSON.parse(raw); } catch(e) { allLeads = []; }
+      }
+      updateStats();
+      renderTable();
+      document.getElementById('lastSync').textContent = 'Last sync: ' + new Date().toLocaleTimeString();
+      document.getElementById('status').textContent = allLeads.length + ' leads loaded';
+    }
+
+    function scoreClass(s) {
+      s = parseInt(s) || 0;
+      if (s >= 7) return 'hot';
+      if (s >= 4) return 'warm';
+      return 'cold';
+    }
+
+    function updateStats() {
+      document.getElementById('statTotal').textContent = allLeads.length;
+      document.getElementById('statHot').textContent = allLeads.filter(l => (l.score||0) >= 7).length;
+      document.getElementById('statBuyers').textContent = allLeads.filter(l => (l.intent||'').toLowerCase().includes('buy')).length;
+      document.getElementById('statSellers').textContent = allLeads.filter(l => (l.intent||'').toLowerCase().includes('sell')).length;
+      document.getElementById('statBooked').textContent = allLeads.filter(l => l.booked).length;
+      document.getElementById('liveCount').textContent = allLeads.length + ' leads';
+    }
+
+    function renderTable() {
+      const q = document.getElementById('search').value.toLowerCase();
+      const sf = document.getElementById('filterScore').value;
+      let leads = allLeads.filter(l => {
+        const match = !q || [l.name,l.email,l.area].join(' ').toLowerCase().includes(q);
+        const sc = scoreClass(l.score);
+        const scoreMatch = !sf || sc === sf;
+        return match && scoreMatch;
+      });
+      const tbody = document.getElementById('leadsBody');
+      const empty = document.getElementById('emptyState');
+      if (leads.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      tbody.innerHTML = leads.map(l => {
+        const sc = scoreClass(l.score);
+        const ts = l.timestamp ? new Date(l.timestamp).toLocaleDateString() : '—';
+        return `<tr>
+          <td style="font-weight:600">${esc(l.name||'—')}</td>
+          <td><a href="mailto:${esc(l.email||'')}" style="color:#60a5fa;text-decoration:none">${esc(l.email||'—')}</a></td>
+          <td>${esc(l.phone||'—')}</td>
+          <td><span class="score ${sc}">${l.score||'?'}/10</span></td>
+          <td class="intent">${esc(l.intent||'—')}</td>
+          <td>${esc(l.area||'—')}</td>
+          <td>${esc(l.budget||'—')}</td>
+          <td>${esc(l.timeline||'—')}</td>
+          <td style="color:#64748b;font-size:12px">${ts}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function exportCSV() {
+      const cols = ['name','email','phone','score','intent','area','budget','timeline','timestamp'];
+      const rows = [cols.join(','), ...allLeads.map(l => cols.map(c => `"${(l[c]||'').toString().replace(/"/g,'""')}"`).join(','))];
+      const blob = new Blob([rows.join('\n')], {type:'text/csv'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'leads.csv'; a.click();
+    }
+
+    loadLeads();
+  </script>
+</body>
+</html>
