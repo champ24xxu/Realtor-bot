@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Lead Assistant for Real Estate Agents | NeighborAI</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Agent pitch banner */
+    .agent-banner {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: white;
+      padding: 60px 24px;
+      text-align: center;
+    }
+    .agent-banner .tag {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #a8d8ff;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .agent-banner h1 {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 800;
+      margin: 0 0 16px;
+      line-height: 1.15;
+    }
+    .agent-banner h1 span {
+      color: #60a5fa;
+    }
+    .agent-banner p {
+      font-size: clamp(16px, 2.5vw, 20px);
+      color: rgba(255,255,255,0.75);
+      max-width: 640px;
+      margin: 0 auto 32px;
+      line-height: 1.6;
+    }
+    .agent-banner .cta-row {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-white {
+      background: white;
+      color: #1a1a2e;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 14px 28px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-white:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    .btn-outline-white {
+      background: transparent;
+      color: white;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 14px 28px;
+      border-radius: 10px;
+      border: 2px solid rgba(255,255,255,0.4);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .btn-outline-white:hover {
+      border-color: white;
+      background: rgba(255,255,255,0.08);
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-item .num {
+      font-size: 28px;
+      font-weight: 800;
+      color: #1a1a2e;
+    }
+    .stat-item .label {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* Demo callout */
+    .demo-callout {
+      background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+      border: 1px solid #bfdbfe;
+      border-radius: 16px;
+      padding: 24px 32px;
+      text-align: center;
+      max-width: 700px;
+      margin: 40px auto 20px;
+    }
+    .demo-callout h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1e3a5f;
+      margin-bottom: 8px;
+    }
+    .demo-callout p {
+      color: #475569;
+      font-size: 15px;
+      margin: 0;
+    }
+    .demo-callout .arrow {
+      font-size: 28px;
+      margin-top: 12px;
+      display: block;
+      animation: bounce 1.2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(6px); }
+    }
+
+    /* Agent benefits */
+    .agent-benefits {
+      background: white;
+      padding: 60px 24px;
+    }
+    .agent-benefits h2 {
+      text-align: center;
+      font-size: clamp(22px, 4vw, 36px);
+      font-weight: 800;
+      color: #1a1a2e;
+      margin-bottom: 8px;
+    }
+    .agent-benefits .subtitle {
+      text-align: center;
+      color: #64748b;
+      font-size: 16px;
+      margin-bottom: 44px;
+    }
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .benefit-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 28px 24px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .benefit-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+    }
+    .benefit-icon {
+      font-size: 32px;
+      margin-bottom: 14px;
+    }
+    .benefit-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 8px;
+    }
+    .benefit-card p {
+      color: #64748b;
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* Final CTA */
+    .final-cta {
+      background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+      color: white;
+      padding: 60px 24px;
+      text-align: center;
+    }
+    .final-cta h2 {
+      font-size: clamp(24px, 4vw, 40px);
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    .final-cta p {
+      color: rgba(255,255,255,0.7);
+      font-size: 17px;
+      margin-bottom: 32px;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .final-cta .fine-print {
+      margin-top: 16px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.45);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Agent-Facing Hero -->
+  <section class="agent-banner">
+    <div class="tag">🏡 Built for Real Estate Agents</div>
+    <h1>Never Miss a Lead <span>While You're Showing Homes</span></h1>
+    <p>Your AI assistant qualifies buyers, answers questions, and books showings — 24/7, automatically. No extra staff needed.</p>
+    <div class="cta-row">
+      <a href="https://neighborai.io" class="btn-white" target="_blank">Get This for My Business</a>
+      <a href="#demo" class="btn-outline-white">See the Demo ↓</a>
+    </div>
+  </section>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="num">24/7</div>
+      <div class="label">Always capturing leads</div>
+    </div>
+    <div class="stat-item">
+      <div class="num">3 days</div>
+      <div class="label">Average setup time</div>
+    </div>
+    <div class="stat-item">
+      <div class="num">$0*</div>
+      <div class="label">Monthly fees (support optional)</div>
+    </div>
+    <div class="stat-item">
+      <div class="num">Auto</div>
+      <div class="label">Books appointments</div>
+    </div>
+  </div>
+
+  <!-- Agent Benefits -->
+  <section class="agent-benefits">
+    <h2>What It Does For You</h2>
+    <p class="subtitle">While you're out closing deals, your AI is working the inbox.</p>
+    <div class="benefits-grid">
+      <div class="benefit-card">
+        <div class="benefit-icon">🎯</div>
+        <h3>Qualifies Every Lead</h3>
+        <p>Asks smart questions to separate serious buyers from tire-kickers. Hot leads come pre-qualified to your inbox.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon">📅</div>
+        <h3>Books Showings Automatically</h3>
+        <p>Syncs with your Calendly. Buyers pick a time, it's on your calendar — no back-and-forth needed.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon">💬</div>
+        <h3>Answers Questions Instantly</h3>
+        <p>Pricing, neighborhood info, school ratings, mortgage estimates — answered in seconds, any time of day.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon">📊</div>
+        <h3>Every Lead in Your CRM</h3>
+        <p>Automatically logs contact info, budget, timeline, and preferences. Nothing falls through the cracks.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon">⚡</div>
+        <h3>Live in 3 Days</h3>
+        <p>We handle everything — setup, training, deployment. You just answer a few questions about your business.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon">🔒</div>
+        <h3>You Own It</h3>
+        <p>No vendor lock-in. No monthly subscription to us. Your bot, your leads, your business.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo Callout -->
+  <div id="demo" class="container">
+    <div class="demo-callout">
+      <h3>👇 Try the Live Demo Below</h3>
+      <p>This is exactly what your buyers experience on your site. Click the chat button in the bottom-right corner and have a conversation.</p>
+      <span class="arrow">↓</span>
+    </div>
+  </div>
+
+  <div class="container">
+    <main>
+      <header class="hero-header">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <h1>Your Dream Home Awaits</h1>
+          <p>Find the perfect property with AI-powered matching</p>
+          <button id="start-chat" class="btn-primary btn-large">Find Your Home Now</button>
+        </div>
+      </header>
+
+      <section id="features" class="features">
+        <h2>Why Choose Us?</h2>
+        <div class="features-grid">
+          <div class="feature">
+            <div class="feature-icon">🎯</div>
+            <h3>Smart Matching</h3>
+            <p>Our AI learns what you want and shows you homes that truly fit your lifestyle and budget.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">⚡</div>
+            <h3>Lightning Fast</h3>
+            <p>Get matched with perfect properties in minutes, not days. Real listings, real results.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">💬</div>
+            <h3>Easy Conversation</h3>
+            <p>Just chat with our bot. Answer simple questions and get instant recommendations.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">📍</div>
+            <h3>Local Expertise</h3>
+            <p>Deep knowledge of neighborhoods, schools, and communities.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">🔒</div>
+            <h3>Trusted Partners</h3>
+            <p>Connected directly with top real estate agents ready to help you close.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">💰</div>
+            <h3>All Price Ranges</h3>
+            <p>From starter homes to luxury properties, we've got something for everyone.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Live Property Intelligence Tool -->
+  <section id="property-tool" style="background:linear-gradient(135deg,#1a1a2e,#0f3460); padding:70px 24px; text-align:center;">
+    <div style="display:inline-block; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#a8d8ff; font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:5px 14px; border-radius:20px; margin-bottom:16px;">🔴 Live Demo</div>
+    <h2 style="font-size:clamp(24px,4vw,38px); font-weight:800; color:white; margin-bottom:8px;">Instant Property Intelligence</h2>
+    <p style="color:rgba(255,255,255,0.65); font-size:16px; margin-bottom:36px; max-width:560px; margin-left:auto; margin-right:auto;">Your AI pulls live property values, rental income potential, and comparable sales — on any address, instantly.</p>
+
+    <div style="max-width:620px; margin:0 auto;">
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+        <input id="prop-address" type="text" placeholder="Street address (e.g. 123 Main St)" style="flex:2; min-width:200px; padding:14px 18px; border-radius:12px; border:none; font-size:15px; outline:none;">
+        <input id="prop-city" type="text" placeholder="City" value="Albuquerque" style="flex:1; min-width:120px; padding:14px 18px; border-radius:12px; border:none; font-size:15px; outline:none;">
+        <input id="prop-state" type="text" placeholder="State" value="NM" style="width:70px; padding:14px 18px; border-radius:12px; border:none; font-size:15px; outline:none; text-transform:uppercase;">
+      </div>
+      <button id="prop-search-btn" onclick="propertySearch()" style="width:100%; padding:16px; background:#6366f1; color:white; border:none; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; transition:all 0.2s;">🔍 Analyze Property</button>
+
+      <div id="prop-results" style="display:none; margin-top:24px; text-align:left;"></div>
+    </div>
+  </section>
+
+  <!-- AI Capabilities Showcase -->
+  <section style="background:#0a0f1e; padding:70px 24px;">
+    <div style="text-align:center; margin-bottom:52px;">
+      <div style="display:inline-block; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); color:#a5b4fc; font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:5px 14px; border-radius:20px; margin-bottom:16px;">Full AI Deployment</div>
+      <h2 style="font-size:clamp(24px,4vw,38px); font-weight:800; color:white; margin-bottom:8px;">You're Not Just Getting a Chatbot</h2>
+      <p style="color:rgba(255,255,255,0.55); font-size:16px; max-width:580px; margin:0 auto;">You're getting a full AI assistant that works for your business 24/7 — across every channel, every task.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; max-width:1100px; margin:0 auto;">
+
+      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:28px 24px;">
+        <div style="font-size:32px; margin-bottom:14px;">🏠</div>
+        <h3 style="color:white; font-size:17px; font-weight:700; margin-bottom:8px;">Live Property Lookup</h3>
+        <p style="color:rgba(255,255,255,0.5); font-size:13px; line-height:1.6; margin:0;">Ask your AI "what's 123 Main St worth?" — it pulls live AVM, rental income potential, and comps from RentCast instantly. No manual research.</p>
+        <div style="margin-top:14px; background:rgba(0,0,0,0.3); border-radius:10px; padding:12px; font-family:monospace; font-size:12px; color:#86efac;">&gt; "What's 8500 Paseo Del Norte worth?"<br><span style="color:#60a5fa;">→ Est. $567K | Rent: ~$2,140/mo | 3 comps found</span></div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:28px 24px;">
+        <div style="font-size:32px; margin-bottom:14px;">🔎</div>
+        <h3 style="color:white; font-size:17px; font-weight:700; margin-bottom:8px;">Lead Scraping & Research</h3>
+        <p style="color:rgba(255,255,255,0.5); font-size:13px; line-height:1.6; margin:0;">Your AI scours public records, Zillow, Instagram, and directories to find potential buyers and sellers — compiled into a ready-to-contact list.</p>
+        <div style="margin-top:14px; background:rgba(0,0,0,0.3); border-radius:10px; padding:12px; font-family:monospace; font-size:12px; color:#86efac;">&gt; "Find motivated sellers in 87110"<br><span style="color:#60a5fa;">→ 14 leads found | Sorted by likelihood | Exported</span></div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:28px 24px;">
+        <div style="font-size:32px; margin-bottom:14px;">📊</div>
+        <h3 style="color:white; font-size:17px; font-weight:700; margin-bottom:8px;">Auto Market Reports</h3>
+        <p style="color:rgba(255,255,255,0.5); font-size:13px; line-height:1.6; margin:0;">Every Monday morning, your AI sends you (and your clients) a custom market update — price trends, new listings, days on market. Hands-free.</p>
+        <div style="margin-top:14px; background:rgba(0,0,0,0.3); border-radius:10px; padding:12px; font-family:monospace; font-size:12px; color:#86efac;">&gt; Weekly: ABQ market report<br><span style="color:#60a5fa;">→ Avg price ↑2.3% | 47 new listings | Sent ✓</span></div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:28px 24px;">
+        <div style="font-size:32px; margin-bottom:14px;">📱</div>
+        <h3 style="color:white; font-size:17px; font-weight:700; margin-bottom:8px;">Multi-Channel AI</h3>
+        <p style="color:rgba(255,255,255,0.5); font-size:13px; line-height:1.6; margin:0;">Your AI works across your website, Instagram DMs, WhatsApp, Facebook Messenger, and SMS — one brain, every channel.</p>
+        <div style="margin-top:14px; background:rgba(0,0,0,0.3); border-radius:10px; padding:12px; font-family:monospace; font-size:12px; color:#86efac;">&gt; Channels: Web + IG + WhatsApp<br><span style="color:#60a5fa;">→ All leads → one dashboard → zero missed</span></div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:28px 24px;">
+        <div style="font-size:32px; margin-bottom:14px;">🔄</div>
+        <h3 style="color:white; font-size:17px; font-weight:700; margin-bottom:8px;">Smart Follow-Up Sequences</h3>
+        <p style="color:rgba(255,255,255,0.5); font-size:13px; line-height:1.6; margin:0;">Captures lead → auto-sends personalized follow-ups on Day 1, 3, and 7 with new listings and market updates. Never lose a warm lead again.</p>
+        <div style="margin-top:14px; background:rgba(0,0,0,0.3); border-radius:10px; padding:12px; font-family:monospace; font-size:12px; color:#86efac;">&gt; Lead captured: Sarah M.<br><span style="color:#60a5fa;">→ Day 1 ✓ | Day 3 ✓ | Showing booked 📅</span></div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:28px 24px;">
+        <div style="font-size:32px; margin-bottom:14px;">🤝</div>
+        <h3 style="color:white; font-size:17px; font-weight:700; margin-bottom:8px;">CRM + Calendar Sync</h3>
+        <p style="color:rgba(255,255,255,0.5); font-size:13px; line-height:1.6; margin:0;">Every lead auto-syncs to HubSpot with full conversation history. Every booked showing lands directly on your calendar. Zero manual data entry.</p>
+        <div style="margin-top:14px; background:rgba(0,0,0,0.3); border-radius:10px; padding:12px; font-family:monospace; font-size:12px; color:#86efac;">&gt; New lead → HubSpot ✓ → Calendar ✓<br><span style="color:#60a5fa;">→ Contact created | Showing: Thu 2PM</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Features In Action (CSS Mockups) -->
+  <section style="background:white; padding:70px 24px;">
+    <div style="text-align:center; margin-bottom:52px;">
+      <div style="display:inline-block; background:#f0fdf4; border:1px solid #86efac; color:#16a34a; font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:5px 14px; border-radius:20px; margin-bottom:16px;">See It In Action</div>
+      <h2 style="font-size:clamp(24px,4vw,38px); font-weight:800; color:#1a1a2e; margin-bottom:8px;">Every Feature, Built for Agents</h2>
+      <p style="color:#64748b; font-size:16px; max-width:560px; margin:0 auto;">Your buyers get a premium experience. You get qualified leads on autopilot.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:32px; max-width:1100px; margin:0 auto; align-items:start;">
+
+      <!-- Mockup 1: Chat Flow -->
+      <div>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:20px; padding:20px; margin-bottom:16px;">
+          <div style="background:#1a1a2e; border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+            <span style="font-size:16px;">🏡</span>
+            <span style="color:white; font-weight:700; font-size:14px;">Real Estate Assistant</span>
+            <span style="margin-left:auto; color:rgba(255,255,255,0.5); font-size:18px; cursor:pointer;">✕</span>
+          </div>
+          <!-- Bot message -->
+          <div style="display:flex; margin-bottom:10px;">
+            <div style="background:#f1f5f9; border-radius:0 12px 12px 12px; padding:10px 14px; max-width:75%; font-size:13px; color:#1e293b; line-height:1.5;">Hi! 👋 I'm your AI home-finding assistant. Ready to find your perfect match?</div>
+          </div>
+          <!-- Quick replies -->
+          <div style="display:flex; gap:8px; padding:0 0 8px; flex-wrap:wrap;">
+            <span style="background:white; border:2px solid #6366f1; color:#4f46e5; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600;">Yes, let's go! 🏡</span>
+            <span style="background:white; border:2px solid #6366f1; color:#4f46e5; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600;">How does this work?</span>
+          </div>
+          <!-- User reply -->
+          <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+            <div style="background:#6366f1; border-radius:12px 0 12px 12px; padding:10px 14px; max-width:75%; font-size:13px; color:white;">Yes, let's go! 🏡</div>
+          </div>
+          <!-- Budget question -->
+          <div style="display:flex; margin-bottom:10px;">
+            <div style="background:#f1f5f9; border-radius:0 12px 12px 12px; padding:10px 14px; max-width:75%; font-size:13px; color:#1e293b; line-height:1.5;">💰 What's your budget range?</div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <span style="background:white; border:2px solid #6366f1; color:#4f46e5; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:600;">Under $200k</span>
+            <span style="background:white; border:2px solid #6366f1; color:#4f46e5; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:600;">$200k–$300k</span>
+            <span style="background:white; border:2px solid #6366f1; color:#4f46e5; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:600;">$300k–$450k</span>
+            <span style="background:white; border:2px solid #6366f1; color:#4f46e5; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:600;">$450k+</span>
+          </div>
+        </div>
+        <h3 style="font-size:17px; font-weight:700; color:#1a1a2e; margin-bottom:6px;">🎯 Smart Lead Qualification</h3>
+        <p style="font-size:14px; color:#64748b; line-height:1.6; margin:0;">Tap-to-answer quick replies guide buyers through budget, beds, timeline, and area — no typing needed. Completion rates skyrocket.</p>
+      </div>
+
+      <!-- Mockup 2: Mortgage + Neighborhood -->
+      <div>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:20px; padding:20px; margin-bottom:16px;">
+          <!-- Neighborhood card -->
+          <div style="background:linear-gradient(135deg,#eff6ff,#f8faff); border:1px solid #bfdbfe; border-radius:14px; padding:14px 16px; margin-bottom:12px;">
+            <div style="font-size:13px; font-weight:800; color:#1e3a5f; margin-bottom:4px;">📍 Northeast Heights</div>
+            <div style="font-size:11px; color:#64748b; margin-bottom:10px;">Top-rated schools, family-friendly, strong resale value.</div>
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+              <span style="font-size:11px; color:#475569; width:100px;">🔒 Safety</span>
+              <div style="flex:1; background:#e2e8f0; border-radius:99px; height:6px;"><div style="width:80%; height:100%; background:linear-gradient(90deg,#6366f1,#3b82f6); border-radius:99px;"></div></div>
+              <span style="font-size:11px; font-weight:700; color:#1e3a5f;">8/10</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+              <span style="font-size:11px; color:#475569; width:100px;">🏫 Schools</span>
+              <div style="flex:1; background:#e2e8f0; border-radius:99px; height:6px;"><div style="width:90%; height:100%; background:linear-gradient(90deg,#6366f1,#3b82f6); border-radius:99px;"></div></div>
+              <span style="font-size:11px; font-weight:700; color:#1e3a5f;">9/10</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:11px; color:#475569; width:100px;">📈 Appreciation</span>
+              <div style="flex:1; background:#e2e8f0; border-radius:99px; height:6px;"><div style="width:70%; height:100%; background:linear-gradient(90deg,#6366f1,#3b82f6); border-radius:99px;"></div></div>
+              <span style="font-size:11px; font-weight:700; color:#1e3a5f;">7/10</span>
+            </div>
+          </div>
+          <!-- Mortgage card -->
+          <div style="background:linear-gradient(135deg,#f0fdf4,#ecfdf5); border:1px solid #86efac; border-radius:14px; padding:14px 16px;">
+            <div style="font-size:11px; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">💰 Mortgage Estimate</div>
+            <div style="font-size:12px; color:#1a1a2e; font-weight:600; margin-bottom:8px;">$265,000 home</div>
+            <div style="display:flex; justify-content:space-between; font-size:11px; color:#475569; margin-bottom:4px;"><span>Down Payment (20%)</span><span style="font-weight:600;color:#1e3a5f;">$53,000</span></div>
+            <div style="display:flex; justify-content:space-between; font-size:11px; color:#475569; margin-bottom:8px;"><span>Interest Rate</span><span style="font-weight:600;color:#1e3a5f;">6.99% (30yr)</span></div>
+            <div style="text-align:center; font-size:28px; font-weight:800; color:#16a34a; line-height:1;">~$1,404<span style="font-size:13px; font-weight:500; color:#64748b;">/month</span></div>
+          </div>
+        </div>
+        <h3 style="font-size:17px; font-weight:700; color:#1a1a2e; margin-bottom:6px;">📊 Neighborhood Scores + Mortgage Calc</h3>
+        <p style="font-size:14px; color:#64748b; line-height:1.6; margin:0;">Buyers instantly see area scores (Safety, Schools, Appreciation) and a real mortgage estimate. Answers the questions agents get asked 100x a day.</p>
+      </div>
+
+      <!-- Mockup 3: Follow-Up Sequences (NEW PRODUCT) -->
+      <div>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:20px; padding:20px; margin-bottom:16px; position:relative; overflow:hidden;">
+          <div style="position:absolute; top:12px; right:12px; background:#6366f1; color:white; font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px;">NEW</div>
+          <!-- Timeline follow-up sequence -->
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div style="background:#6366f1; color:white; font-size:10px; font-weight:700; padding:4px 8px; border-radius:8px; white-space:nowrap; margin-top:2px;">Day 1</div>
+              <div style="background:#f1f5f9; border-radius:0 12px 12px 12px; padding:10px 12px; font-size:12px; color:#1e293b; line-height:1.5; flex:1;">Hey Sarah! 👋 Just checking in — found 2 new listings in Northeast Heights under $300k that match exactly what you told me. Want me to send them over?</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div style="background:#0ea5e9; color:white; font-size:10px; font-weight:700; padding:4px 8px; border-radius:8px; white-space:nowrap; margin-top:2px;">Day 3</div>
+              <div style="background:#f1f5f9; border-radius:0 12px 12px 12px; padding:10px 12px; font-size:12px; color:#1e293b; line-height:1.5; flex:1;">📈 Quick market update: NE Heights avg price dropped 2% this week. Could be your window! Your agent has time Thursday or Friday — want to book a tour?</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div style="background:#16a34a; color:white; font-size:10px; font-weight:700; padding:4px 8px; border-radius:8px; white-space:nowrap; margin-top:2px;">Day 7</div>
+              <div style="background:#f1f5f9; border-radius:0 12px 12px 12px; padding:10px 12px; font-size:12px; color:#1e293b; line-height:1.5; flex:1;">Still searching, Sarah? 🏡 A home at 4521 San Pedro just had a price cut to $249k. 3 beds, 2 baths — right in your range. Reply YES and I'll book a showing today.</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:inline-block; background:#f5f3ff; border:1px solid #c4b5fd; color:#7c3aed; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; margin-bottom:8px;">Coming Soon</div>
+        <h3 style="font-size:17px; font-weight:700; color:#1a1a2e; margin-bottom:6px;">🔄 Automated Follow-Up Sequences</h3>
+        <p style="font-size:14px; color:#64748b; line-height:1.6; margin:0;">After capturing a lead, the bot automatically follows up over 7 days with personalized messages, new listings, and market updates. 80% of deals close after the 5th follow-up — now it happens automatically.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section style="background:#f8fafc; padding:60px 24px; text-align:center;">
+    <div style="display:inline-block; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:5px 14px; border-radius:20px; margin-bottom:16px;">Pricing</div>
+    <h2 style="font-size:clamp(24px,4vw,38px); font-weight:800; color:#1a1a2e; margin-bottom:8px;">Simple, Flat Pricing</h2>
+    <p style="color:#64748b; font-size:16px; margin-bottom:44px;">One-time setup. You own it forever. Monthly support is optional — not required.</p>
+
+    <div style="display:flex; gap:24px; justify-content:center; flex-wrap:wrap; max-width:860px; margin:0 auto;">
+
+      <!-- Solo Agent -->
+      <div style="background:white; border:1px solid #e2e8f0; border-radius:20px; padding:36px 32px; flex:1; min-width:240px; max-width:320px; text-align:left; position:relative;">
+        <div style="font-size:13px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Solo Agent</div>
+        <div style="font-size:42px; font-weight:800; color:#1a1a2e; line-height:1;">$499</div>
+        <div style="font-size:14px; color:#1a1a2e; font-weight:600; margin-top:4px;">one-time setup</div>
+        <div style="font-size:13px; color:#94a3b8; margin-bottom:24px; margin-top:6px; padding:8px 12px; background:#f8fafc; border-radius:8px; border-left:3px solid #e2e8f0;">➕ Optional: <strong style="color:#475569;">+$99/mo</strong> for ongoing support, updates & priority help</div>
+        <ul style="list-style:none; padding:0; margin:0 0 28px; display:flex; flex-direction:column; gap:10px;">
+          <li style="font-size:14px; color:#475569;">✅ AI lead capture bot on your site</li>
+          <li style="font-size:14px; color:#475569;">✅ Buyer qualification flow</li>
+          <li style="font-size:14px; color:#475569;">✅ Auto-books to your Calendly</li>
+          <li style="font-size:14px; color:#475569;">✅ CRM lead sync</li>
+          <li style="font-size:14px; color:#475569;">✅ Live in 3 days</li>
+          <li style="font-size:14px; color:#475569;">✅ 30-day support included</li>
+        </ul>
+        <a href="https://neighborai.io" target="_blank" style="display:block; background:#1a1a2e; color:white; text-align:center; padding:14px; border-radius:12px; font-weight:700; font-size:15px; text-decoration:none;">Get Started →</a>
+      </div>
+
+      <!-- Team / Broker -->
+      <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460); border-radius:20px; padding:36px 32px; flex:1; min-width:240px; max-width:320px; text-align:left; position:relative; color:white;">
+        <div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:#6366f1; color:white; font-size:11px; font-weight:700; letter-spacing:0.5px; padding:4px 14px; border-radius:20px; white-space:nowrap;">⭐ Most Popular</div>
+        <div style="font-size:13px; font-weight:700; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">Team / Brokerage</div>
+        <div style="font-size:42px; font-weight:800; color:white; line-height:1;">$1,500</div>
+        <div style="font-size:14px; color:rgba(255,255,255,0.85); font-weight:600; margin-top:4px;">one-time setup</div>
+        <div style="font-size:13px; color:rgba(255,255,255,0.55); margin-bottom:24px; margin-top:6px; padding:8px 12px; background:rgba(255,255,255,0.07); border-radius:8px; border-left:3px solid rgba(255,255,255,0.2);">➕ Optional: <strong style="color:rgba(255,255,255,0.85);">+$199/mo</strong> for ongoing support, updates & priority help</div>
+        <ul style="list-style:none; padding:0; margin:0 0 28px; display:flex; flex-direction:column; gap:10px;">
+          <li style="font-size:14px; color:rgba(255,255,255,0.8);">✅ Everything in Solo</li>
+          <li style="font-size:14px; color:rgba(255,255,255,0.8);">✅ Multi-agent lead routing</li>
+          <li style="font-size:14px; color:rgba(255,255,255,0.8);">✅ Team lead dashboard</li>
+          <li style="font-size:14px; color:rgba(255,255,255,0.8);">✅ White-label branding</li>
+          <li style="font-size:14px; color:rgba(255,255,255,0.8);">✅ CRM integration (your system)</li>
+          <li style="font-size:14px; color:rgba(255,255,255,0.8);">✅ Team onboarding call</li>
+          <li style="font-size:14px; color:rgba(255,255,255,0.8);">✅ 60-day support included</li>
+        </ul>
+        <a href="https://neighborai.io" target="_blank" style="display:block; background:#6366f1; color:white; text-align:center; padding:14px; border-radius:12px; font-weight:700; font-size:15px; text-decoration:none;">Get Started →</a>
+      </div>
+
+    </div>
+
+    <p style="margin-top:28px; font-size:14px; color:#64748b; max-width:520px; margin-left:auto; margin-right:auto; line-height:1.6;">
+      💡 <strong>How it works:</strong> You pay once for setup and own the bot forever. No subscription required. If you want us to handle ongoing updates, improvements, and priority support — that's available as an optional add-on at $99/mo (Solo) or $199/mo (Team). Cancel anytime.
+    </p>
+    <p style="margin-top:12px; font-size:13px; color:#94a3b8;">Small AI usage costs typically under $10/month.</p>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="final-cta">
+    <h2>Ready to Never Miss a Lead Again?</h2>
+    <p>We set it up for you in 3 days. You get every lead — we just build the machine.</p>
+    <a href="https://neighborai.io" class="btn-white" target="_blank">Get Started at NeighborAI →</a>
+    <p class="fine-print">Questions? DM us on Instagram @neighborai</p>
+  </section>
+
+  <footer class="footer">
+    <p>&copy; 2026 NeighborAI. AI Assistants for Real Estate Professionals.</p>
+  </footer>
+
+  <!-- Chat Widget Container -->
+  <div id="chat-widget" class="chat-widget hidden">
+    <div class="chat-header">
+      <h3>Real Estate Assistant</h3>
+      <button id="close-chat" class="close-btn">✕</button>
+    </div>
+    <div id="chat-messages" class="chat-messages"></div>
+    <div class="chat-input-area">
+      <input 
+        id="chat-input" 
+        type="text" 
+        placeholder="Type your answer..."
+        autocomplete="off"
+      >
+      <button id="send-btn" class="send-btn">Send</button>
+    </div>
+  </div>
+
+  <div id="chat-overlay" class="chat-overlay hidden"></div>
+
+  <script>
+  // Property Intelligence Tool
+  const RENTCAST_KEY = 'e6d1d9a8ce9641838c3509e07c533422';
+  const DEMO_PROPERTY = {
+    address: '8500 Paseo Del Norte NE, Albuquerque, NM',
+    estimatedValue: 567000,
+    valueLow: 437000,
+    valueHigh: 697000,
+    estimatedRent: 2140,
+    rentLow: 1810,
+    rentHigh: 2470,
+    comparables: [
+      { address: '8718 Liberty Dr NE, Albuquerque, NM', price: 415000, beds: 3, baths: 1, sqft: 1972, type: 'Single Family' },
+      { address: '8704 Rough Rider Rd NE, Albuquerque, NM', price: 389000, beds: 3, baths: 2, sqft: 1800, type: 'Single Family' },
+      { address: '8719 Desert Fox Way NE, Albuquerque, NM', price: 445000, beds: 3, baths: 2.5, sqft: 2147, type: 'Condo' },
+    ],
+    demo: false,
+  };
+
+  function propertySearch() {
+    const address = document.getElementById('prop-address').value.trim();
+    const city    = document.getElementById('prop-city').value.trim();
+    const state   = document.getElementById('prop-state').value.trim() || 'NM';
+    const btn     = document.getElementById('prop-search-btn');
+    const results = document.getElementById('prop-results');
+
+    if (!address) {
+      document.getElementById('prop-address').focus();
+      return;
+    }
+
+    btn.textContent = '⏳ Analyzing...';
+    btn.disabled = true;
+    results.style.display = 'none';
+
+    const fullAddress = [address, city, state].filter(Boolean).join(', ');
+    const avmUrl  = `https://api.rentcast.io/v1/avm/value?address=${encodeURIComponent(fullAddress)}`;
+    const rentUrl = `https://api.rentcast.io/v1/avm/rent/long-term?address=${encodeURIComponent(fullAddress)}`;
+    const headers = { 'X-Api-Key': RENTCAST_KEY };
+
+    Promise.all([
+      fetch(avmUrl,  { headers, signal: AbortSignal.timeout(8000) }).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(rentUrl, { headers, signal: AbortSignal.timeout(8000) }).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([avm, rent]) => {
+      if (avm?.price) {
+        renderPropertyCard({
+          address: fullAddress,
+          estimatedValue: avm.price,
+          valueLow: avm.priceLow || Math.round(avm.price * 0.85),
+          valueHigh: avm.priceHigh || Math.round(avm.price * 1.15),
+          estimatedRent: rent?.rent || null,
+          rentLow: rent?.rentRangeLow || null,
+          rentHigh: rent?.rentRangeHigh || null,
+          comparables: avm.comparables || [],
+          demo: false,
+        });
+      } else {
+        renderPropertyCard({ ...DEMO_PROPERTY, address: fullAddress, demo: true });
+      }
+    }).catch(() => renderPropertyCard({ ...DEMO_PROPERTY, address: fullAddress, demo: true }))
+    .finally(() => { btn.textContent = '🔍 Analyze Property'; btn.disabled = false; });
+  }
+
+  function renderPropertyCard(d) {
+    const fmt = n => n ? '$' + Number(n).toLocaleString() : '—';
+    const results = document.getElementById('prop-results');
+    results.innerHTML = `
+      <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:24px; color:white;">
+        ${d.demo ? '<div style="background:#f59e0b; color:#1a1a2e; font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; display:inline-block; margin-bottom:12px;">📍 Demo Data — VPS Offline</div>' : '<div style="background:#22c55e; color:#052e16; font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; display:inline-block; margin-bottom:12px;">✅ Live RentCast Data</div>'}
+        <div style="font-size:14px; color:rgba(255,255,255,0.5); margin-bottom:16px;">${d.address}</div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+          <div style="background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); border-radius:12px; padding:16px; text-align:center;">
+            <div style="font-size:11px; color:#a5b4fc; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">🏠 Est. Value</div>
+            <div style="font-size:26px; font-weight:800; color:white;">${fmt(d.estimatedValue)}</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.4); margin-top:4px;">${fmt(d.valueLow)} – ${fmt(d.valueHigh)}</div>
+          </div>
+          <div style="background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.25); border-radius:12px; padding:16px; text-align:center;">
+            <div style="font-size:11px; color:#86efac; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">💰 Est. Rent/mo</div>
+            <div style="font-size:26px; font-weight:800; color:white;">${fmt(d.estimatedRent)}</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.4); margin-top:4px;">${fmt(d.rentLow)} – ${fmt(d.rentHigh)}</div>
+          </div>
+        </div>
+
+        ${d.comparables && d.comparables.length ? `
+        <div style="font-size:12px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">📋 Comparable Sales</div>
+        ${d.comparables.map(c => `
+          <div style="background:rgba(255,255,255,0.04); border-radius:10px; padding:12px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div style="font-size:13px; color:rgba(255,255,255,0.8);">${c.address}</div>
+            <div style="display:flex; gap:10px; font-size:12px; color:rgba(255,255,255,0.5);">
+              ${c.beds ? `<span>🛏 ${c.beds}</span>` : ''}
+              ${c.baths ? `<span>🚿 ${c.baths}</span>` : ''}
+              ${c.sqft ? `<span>📐 ${Number(c.sqft).toLocaleString()}</span>` : ''}
+              <span style="color:#60a5fa; font-weight:700;">${fmt(c.price)}</span>
+            </div>
+          </div>
+        `).join('')}` : ''}
+
+        <div style="margin-top:16px; padding:12px 16px; background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.2); border-radius:10px; font-size:13px; color:rgba(255,255,255,0.6);">
+          💡 <strong style="color:white;">This is what your AI can pull</strong> on any address — instantly, for any client conversation.
+        </div>
+      </div>
+    `;
+    results.style.display = 'block';
+    document.getElementById('prop-search-btn').addEventListener('keypress', e => { if(e.key==='Enter') propertySearch(); });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('prop-address')?.addEventListener('keypress', e => { if(e.key==='Enter') propertySearch(); });
+  });
+  </script>
+  <script src="chat-widget.js"></script>
+  <script>
+    document.getElementById('start-chat-2') && document.getElementById('start-chat-2').addEventListener('click', function() {
+      document.getElementById('start-chat').click();
+    });
+  </script>
+</body>
+</html>
