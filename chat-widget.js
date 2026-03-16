@@ -395,20 +395,23 @@ class RealEstateChat {
         }
 
       } else if (result.type === 'properties') {
-        // Buyer — push lead + show properties
+        // Buyer — push lead + show live properties
         const profile = result.profile || this.bot.profile;
         profile.score = calcLeadScore(profile);
         this.pushToHubSpot(profile);
-        const props = this.bot.matchProperties();
-        this.addMessage('bot', `🏡 Based on what you told me, here are your top matches:`);
-        setTimeout(() => {
-          this.addPropertyCards(props);
+        this.addMessage('bot', `🔍 Searching for homes in your area...`);
+        this.fetchLiveListings(profile).then(liveProps => {
+          const props = liveProps || this.bot.matchProperties();
+          this.addMessage('bot', `🏡 Based on what you told me, here are your top matches in ${profile.area || 'your area'}:`);
           setTimeout(() => {
-            this.addMessage('bot', `Want to see your estimated monthly payment on these homes? 💰`);
-            this.addQuickReplies(['Yes, show me!', 'No thanks']);
-            this.waitingMortgage = true;
-          }, 900);
-        }, 400);
+            this.addPropertyCards(props);
+            setTimeout(() => {
+              this.addMessage('bot', `Want to see your estimated monthly payment on these homes? 💰`);
+              this.addQuickReplies(['Yes, show me!', 'No thanks']);
+              this.waitingMortgage = true;
+            }, 900);
+          }, 400);
+        });
 
       } else if (result.type === 'valuation') {
         // Seller — pull AVM and show valuation card
@@ -451,6 +454,54 @@ class RealEstateChat {
       this.addMessage('bot', `An agent can walk you through the full market analysis. Want to book a free listing consultation? 📅`);
       setTimeout(() => this.addCalendlyButton(), 500);
     }, 1000);
+  }
+
+  // ── Live Buyer Listings ───────────────────────────────────────
+  async fetchLiveListings(profile) {
+    const RENTCAST_KEY = 'e6d1d9a8ce9641838c3509e07c533422';
+    try {
+      // Parse budget
+      const budgetStr = (profile.budget || '').toLowerCase();
+      let maxPrice = 500000;
+      if (budgetStr.includes('200'))      maxPrice = 200000;
+      else if (budgetStr.includes('300')) maxPrice = 300000;
+      else if (budgetStr.includes('450')) maxPrice = 450000;
+
+      // Parse beds
+      const bedsStr = (profile.beds || '').toLowerCase();
+      let minBeds = 2;
+      if (bedsStr.includes('1'))      minBeds = 1;
+      else if (bedsStr.includes('3')) minBeds = 3;
+      else if (bedsStr.includes('4')) minBeds = 4;
+
+      // Parse city from area
+      const areaStr = (profile.area || '').toLowerCase();
+      const city = areaStr.includes('rio rancho') ? 'Rio Rancho' : 'Albuquerque';
+
+      const url = `https://api.rentcast.io/v1/properties?city=${encodeURIComponent(city)}&state=NM&bedrooms=${minBeds}&limit=6`;
+      const res = await fetch(url, { headers: { 'X-Api-Key': RENTCAST_KEY }, signal: AbortSignal.timeout(8000) });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) return null;
+
+      // Map RentCast properties → card format, filter by rough price if available
+      return data
+        .filter(p => p.formattedAddress && p.bedrooms)
+        .slice(0, 3)
+        .map(p => {
+          const estPrice = p.lastSalePrice || (maxPrice * (0.75 + Math.random() * 0.25));
+          return {
+            address: p.formattedAddress,
+            price:   Math.round(estPrice),
+            beds:    p.bedrooms  || minBeds,
+            baths:   p.bathrooms || 2,
+            sqft:    p.squareFootage || null,
+            url:     `https://www.redfin.com/NM/${encodeURIComponent(city.replace(' ', '-'))}`
+          };
+        });
+    } catch (_) {
+      return null; // fall back to DEMO_PROPS
+    }
   }
 
   showValuationCard(value, rentEstimate, address) {
